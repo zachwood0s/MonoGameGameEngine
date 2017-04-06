@@ -68,10 +68,12 @@ namespace MonoGameGameEngine
         
         public void UpdateSystems(SpriteBatch spriteBatch, GameTime gameTime)
         {
+            spriteBatch.Begin();
             foreach(System system in _systems)
             {
                 system.Update(spriteBatch, gameTime);
             }
+            spriteBatch.End();
         }
 
         public void RegisterComponent(Entity entity)
@@ -107,14 +109,14 @@ namespace MonoGameGameEngine
                 float x = location.Position.X - texture.Dimensions.X / 2;
                 float y = location.Position.Y - texture.Dimensions.Y / 2;
                 Rectangle destRect = new Rectangle((int) x, (int) y, (int) texture.Dimensions.X, (int) texture.Dimensions.Y);
-
+                Rectangle sourceRect = new Rectangle(0, 0, texture.Texture.Width, texture.Texture.Height);
+                Vector2 origin = new Vector2(texture.Texture.Width / 2, texture.Texture.Height / 2);
                 if (texture.Texture != null)
                 {
-                    spriteBatch.Draw(texture.Texture, destRect, Color.White);
+                    spriteBatch.Draw(texture.Texture, destRect, sourceRect, Color.White, (float)location.Rotation,origin, SpriteEffects.None, 1f);
+                
                 }
-                //Debug.WriteLine(location.Name);
             }   
         }
     }
-
 }

@@ -6,6 +6,7 @@ using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 
 namespace MonoGameGameEngine
 {
@@ -18,8 +19,10 @@ namespace MonoGameGameEngine
         SpriteBatch spriteBatch;
 
         public static MoonSharp.Interpreter.Script lua = new MoonSharp.Interpreter.Script();
+        public static string BASE_PATH = "../../../../Content/GameData/";
 
-        private List<Scene> _scenes = new List<Scene>();
+        private Dictionary<string, Scene> _scenes = new Dictionary<string, Scene>();
+        private Scene _currentScene;
 
         public Game1()
         {
@@ -37,33 +40,47 @@ namespace MonoGameGameEngine
         {
             // TODO: Add your initialization logic here
 
-            Scene test = new Scene();
-            Entity fake = new Entity("test", test);
-            fake.AddComponent(new Location2(fake));
-            fake.AddComponent(new Texture2(fake));
-            fake.RemoveComponent("Texture2");
-            fake.AddComponent("Texture2");
-            test.AddEntity(fake);
+            //Scene test = new Scene();
+            //Entity fake = new Entity("test", test);
+            // fake.AddComponent(new Location2(fake));
+            //fake.AddComponent(new Texture2(fake));
+            //fake.RemoveComponent("Texture2");
+            //fake.AddComponent("Texture2");
+            //test.AddEntity(fake);
 
             //JObject obj = JObject.Parse("{test:'wow'}");
-            string scene = "Room1 = { Person = 'ie'}, Room2 = {Person = 'ei'}";
+            StreamReader sr = new StreamReader(BASE_PATH+"Scenes/TestScenes.lua");
+
+            string scene = sr.ReadToEnd();
+            Debug.WriteLine(scene);
+            sr.Close();
+
             DynValue val = Script.RunString("return {"+scene+"}");
 
-            Table tab = val.Table;
+            Table scenes = val.Table;
             
-            foreach(DynValue key in tab.Keys)
+            foreach(DynValue key in scenes.Keys)
             {
                 Debug.WriteLine(key.String + ": ");
-                Table tab2 = (Table) tab[key];
-                foreach(DynValue key2 in tab2.Keys)
+                Scene newScene = new Scene();
+
+                Table entities = (Table) scenes[key];
+                foreach(DynValue key2 in entities.Keys)
                 {
-                    Debug.WriteLine("\t" + key2.String + ": " + tab2[key2].ToString());
+                    Entity newEntity = EntityFactory.LoadEntityFromTable((Table) entities[key2], newScene, Content);
+                    if (newEntity != null) newScene.AddEntity(newEntity);
+                    //Debug.WriteLine("\t" + key2.String + ": " + entities[key2].ToString());
                 }
+
+                _scenes.Add(key.String, newScene);
             }
+
+            _currentScene = _scenes["Room1"];
+            //EntityFactory.LoadEntityFromTable(val.Table, test);
 
             //Debug.WriteLine(obj["test"]);
             
-            _scenes.Add(test);
+            //_scenes.Add(test);
             base.Initialize();
         }
 
@@ -112,10 +129,11 @@ namespace MonoGameGameEngine
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            foreach (Scene scene in _scenes)
-            {
-                scene.Update(spriteBatch, gameTime);
-            }
+            //foreach (Scene scene in _scenes)
+            //{
+            //    scene.Update(spriteBatch, gameTime);
+            //}
+            _currentScene.Update(spriteBatch, gameTime);
             // TODO: Add your drawing code here
 
             base.Draw(gameTime);

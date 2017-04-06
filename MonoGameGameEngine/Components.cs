@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGameEngine;
 using MoonSharp.Interpreter;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 
 namespace Components
@@ -22,7 +24,7 @@ namespace Components
             get;
         }
 
-        bool Load(Table table);
+        bool Load(Table table, ContentManager Content);
     }
 
     public class Location2 : Component
@@ -78,9 +80,23 @@ namespace Components
             }
         }
 
-        public bool Load(Table table)
+        public bool Load(Table table, ContentManager Content)
         {
-            throw new NotImplementedException();
+            double x = 0;
+            double y = 0;
+            try
+            {
+                if (table["x"] != null) x = (double)table["x"];
+                if (table["y"] != null) y = (double)table["y"];
+                if (table["rotation"] != null) _rotation = (double)table["rotation"];
+                _position = new Vector2((float)x, (float)y);
+                return true;
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show("Invalid format for 'dimensions' on Texture2 \n" + exc.ToString());
+                return false;
+            }
         }
     }
 
@@ -136,9 +152,52 @@ namespace Components
             }
         }
 
-        public bool Load(Table table)
+        public bool Load(Table table, ContentManager Content)
         {
-            throw new NotImplementedException();
+            if (table["dimensions"] == null)
+            {
+                MessageBox.Show("'dimensions' property is required for Texture2");
+                return false;
+            }
+            if (table["src"] == null)
+            {
+                MessageBox.Show("'src' property is required for Texture2");
+                return false;
+            }
+
+            try
+            {
+                Table dimensions = table["dimensions"] as Table;
+                double width = (double)dimensions["width"];
+                double height = (double)dimensions["height"];
+                //double h = dimensions["height"];
+
+                _dimensions = new Vector2((float)width, (float)height);
+
+                _texture = Content.Load<Texture2D>("Graphics\\" + table["src"]);
+
+
+                return true;
+            }
+            catch(ContentLoadException eCont)
+            {
+                MessageBox.Show("Problem loading texture from src '"+table["src"]+"' in Texture2 \n" + eCont.ToString());
+                return false;
+            }
+            catch(Exception exc)
+            {
+                MessageBox.Show("Invalid format for 'dimensions' on Texture2 \n" + exc.ToString());
+                return false;
+            }
+
+           // double w = (width == null) ? 0 : width.Number;
+           // double h = (height == null) ? 0 : height.Number;
+
+
+        }
+        public override string ToString()
+        {
+            return "Texture2: Dimensions[" + _dimensions.X + ", " + _dimensions.Y + "]";
         }
     }
 
@@ -167,7 +226,7 @@ namespace Components
             }
         }
 
-        public bool Load(Table table)
+        public bool Load(Table table, ContentManager Content)
         {
             _scripts = new Dictionary<string, DynValue>();
             _scriptTexts = new Dictionary<string, string>();
