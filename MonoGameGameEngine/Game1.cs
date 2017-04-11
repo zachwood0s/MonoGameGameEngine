@@ -40,47 +40,8 @@ namespace MonoGameGameEngine
         {
             // TODO: Add your initialization logic here
 
-            //Scene test = new Scene();
-            //Entity fake = new Entity("test", test);
-            // fake.AddComponent(new Location2(fake));
-            //fake.AddComponent(new Texture2(fake));
-            //fake.RemoveComponent("Texture2");
-            //fake.AddComponent("Texture2");
-            //test.AddEntity(fake);
+            InputManager.SetUpBindings();
 
-            //JObject obj = JObject.Parse("{test:'wow'}");
-            StreamReader sr = new StreamReader(BASE_PATH+"Scenes/TestScenes.lua");
-
-            string scene = sr.ReadToEnd();
-            Debug.WriteLine(scene);
-            sr.Close();
-
-            DynValue val = Script.RunString("return {"+scene+"}");
-
-            Table scenes = val.Table;
-            
-            foreach(DynValue key in scenes.Keys)
-            {
-                Debug.WriteLine(key.String + ": ");
-                Scene newScene = new Scene();
-
-                Table entities = (Table) scenes[key];
-                foreach(DynValue key2 in entities.Keys)
-                {
-                    Entity newEntity = EntityFactory.LoadEntityFromTable((Table) entities[key2], newScene, Content);
-                    if (newEntity != null) newScene.AddEntity(newEntity);
-                    //Debug.WriteLine("\t" + key2.String + ": " + entities[key2].ToString());
-                }
-
-                _scenes.Add(key.String, newScene);
-            }
-
-            _currentScene = _scenes["Room1"];
-            //EntityFactory.LoadEntityFromTable(val.Table, test);
-
-            //Debug.WriteLine(obj["test"]);
-            
-            //_scenes.Add(test);
             base.Initialize();
         }
 
@@ -94,6 +55,37 @@ namespace MonoGameGameEngine
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
+
+            UserData.RegisterAssembly();
+            UserData.RegisterType(typeof(Vector2));
+
+            StreamReader sr = new StreamReader(BASE_PATH + "Scenes/TestScenes.lua");
+
+            string scene = sr.ReadToEnd();
+            Debug.WriteLine(scene);
+            sr.Close();
+
+            DynValue val = Script.RunString("return {" + scene + "}");
+
+            Table scenes = val.Table;
+
+            foreach (DynValue key in scenes.Keys)
+            {
+                Debug.WriteLine(key.String + ": ");
+                Scene newScene = new Scene();
+
+                Table entities = (Table)scenes[key];
+                foreach (DynValue key2 in entities.Keys)
+                {
+                    Entity newEntity = EntityFactory.LoadEntityFromTable((Table)entities[key2], newScene, Content);
+                    if (newEntity != null) newScene.AddEntity(newEntity);
+                    //Debug.WriteLine("\t" + key2.String + ": " + entities[key2].ToString());
+                }
+
+                _scenes.Add(key.String, newScene);
+            }
+
+            _currentScene = _scenes["Room1"];
         }
 
         /// <summary>
@@ -112,13 +104,18 @@ namespace MonoGameGameEngine
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            InputManager.Update();
+
+            if (InputManager.GetAxis("exit") > 0)
+            {
                 Exit();
-
-
-            // TODO: Add your update logic here
+                
+            }
 
             base.Update(gameTime);
+            // TODO: Add your update logic here
+
+            //base.Update(gameTime);
         }
 
         /// <summary>

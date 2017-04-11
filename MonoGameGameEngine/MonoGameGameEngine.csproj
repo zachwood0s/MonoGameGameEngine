@@ -39,6 +39,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Components.cs" />
+    <Compile Include="Content\GameData\Scripts\InputManager.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityFactory.cs" />
     <Compile Include="Game1.cs" />
@@ -77,6 +78,7 @@
     <MonoGameContentReference Include="Content\Content.mgcb" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\GameData\Scripts\test1.lua" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

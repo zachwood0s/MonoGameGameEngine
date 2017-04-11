@@ -28,9 +28,11 @@
             y=100,
             rotation = 1.4
         },
-        Script = function()
-            print("hello world")
-            end
-        
+        Scripts = {
+            playerstop = {
+                moveSpeed = 5,
+                src = "Scripts/test1.lua",
+            }
+        }
     }
 }

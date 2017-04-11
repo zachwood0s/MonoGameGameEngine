@@ -1,4 +1,5 @@
 ﻿using Components;
+using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGameEngine
 {
+    [MoonSharpUserData]
     public class Entity
     {
         private Scene _parent;

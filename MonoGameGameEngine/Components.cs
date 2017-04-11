@@ -5,6 +5,8 @@ using MonoGameGameEngine;
 using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,8 +15,10 @@ using System.Xml;
 
 namespace Components
 {
+    
     public interface Component
     {
+        
         Entity Parent
         {
             get;
@@ -26,7 +30,7 @@ namespace Components
 
         bool Load(Table table, ContentManager Content);
     }
-
+    [MoonSharpUserData]
     public class Location2 : Component
     {
         private static string _name = "Location2";
@@ -99,7 +103,7 @@ namespace Components
             }
         }
     }
-
+    [MoonSharpUserData]
     public class Texture2 : Component
     {
 
@@ -170,7 +174,6 @@ namespace Components
                 Table dimensions = table["dimensions"] as Table;
                 double width = (double)dimensions["width"];
                 double height = (double)dimensions["height"];
-                //double h = dimensions["height"];
 
                 _dimensions = new Vector2((float)width, (float)height);
 
@@ -189,25 +192,20 @@ namespace Components
                 MessageBox.Show("Invalid format for 'dimensions' on Texture2 \n" + exc.ToString());
                 return false;
             }
-
-           // double w = (width == null) ? 0 : width.Number;
-           // double h = (height == null) ? 0 : height.Number;
-
-
         }
         public override string ToString()
         {
             return "Texture2: Dimensions[" + _dimensions.X + ", " + _dimensions.Y + "]";
         }
     }
-
+    [MoonSharpUserData]
     public class Scripts : Component
     {
-        private static string _name;
+        private static string _name = "Scripts";
         private Entity _parent;
 
         private Dictionary<string, DynValue> _scripts;
-        private Dictionary<string, string> _scriptTexts;
+       // private Table _properties;
 
         private Script _script;
         public string Name
@@ -226,38 +224,82 @@ namespace Components
             }
         }
 
-        public bool Load(Table table, ContentManager Content)
-        {
-            _scripts = new Dictionary<string, DynValue>();
-            _scriptTexts = new Dictionary<string, string>();
-            _script = new Script();
-            throw new NotImplementedException();
-            //JObject obj;
-            //obj[]
-        }
-
-        public Dictionary<string, string> ScriptText
+        public Dictionary<string, DynValue> ScriptFunctions
         {
             get
             {
-                return _scriptTexts;
+                return _scripts;
             }
         }
-        public void RunScript(string id)
+        public Script Script
         {
-            if (_scripts[id] != null)
+            get
             {
-                Game1.lua.Call(_scripts[id]);
+                return _script;
             }
         }
+        
+        public Scripts(Entity parent)
+        {
+            _parent = parent;
+        }
+        public bool Load(Table table, ContentManager Content)
+        {
+            _scripts = new Dictionary<string, DynValue>();
+            _script = new Script();
+            //_properties = new Table(_script);
 
-        /*"Character" : {
-            "CollisionBox":{
+            _script.Globals["this"] = _parent;
+            _script.Globals["Vector2"] = typeof(Vector2);
+            _script.Globals["InputManager"] = typeof(InputManager);
 
+            foreach (DynValue scriptKey in table.Keys)
+            {
+                Table script = table[scriptKey] as Table;
+                string scriptSrc = script["src"] as string;
+                if (scriptSrc != null)
+                {
+                    try
+                    {
+                        DynValue newScript = _script.LoadFile(Game1.BASE_PATH + scriptSrc);
+                        _scripts.Add(scriptKey.String, newScript);
+                        // _script.Call(newScript);
+
+                        //Table props = _script.Globals["Properties"] as Table;
+                        Table props = new Table(_script);
+                        foreach(DynValue prop in script.Keys)
+                        {
+                            //props[prop]
+                            if(script[prop] != null && prop.String != "src")
+                            {
+                                props[prop] = script[prop];
+                            }
+                        }
+                        _script.Globals["Properties"] = props;
+                        //Debug.WriteLine((_script.Globals["Properties"] as Table).Keys + "--------");
+
+
+
+                    }
+                    catch (IOException exc)
+                    {
+                        MessageBox.Show("Trouble loading script at location '" + scriptSrc + "'. File not found\n" + exc.ToString());
+                        return false;
+                    }
+                    catch (Exception exc)
+                    {
+                        MessageBox.Show(exc.ToString());
+                        return false;
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("Invalid form for script '" + scriptKey.String + "', must be a string pointing to the src of the script");
+                    return false;
+                }
             }
-            "Scripts":{
-                
-            }
-        }*/
+            return true;
+        }
     }
 }
